@@ -38,6 +38,19 @@
 
   tasks:
 
+    - name: Create Gitlab environment
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ admin_user_name }}"
+        group: "{{ admin_user_name }}"
+        mode: 0775
+      with_items:
+        - "/home/{{ admin_user_name }}/gitlab"
+        - "/home/{{ admin_user_name }}/gitlab/config"
+        - "/home/{{ admin_user_name }}/gitlab/log"
+        - "/home/{{ admin_user_name }}/gitlab/data"
+
     - name: Set docker-compose file from template
       template:
         src: ./templates/docker-compose.docker-gitlab.j2

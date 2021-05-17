@@ -18,7 +18,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 class PythonHTTPServer:
 
     def __init__(self):
-        self.port = 4443
+        self.port = 443
         self.handler = MyHandler
         self.server = HTTPServer(("", self.port), self.handler)
 
