@@ -1,0 +1,62 @@
+---
+
+#
+# PROJECT INFRASTRUCTURE PROVISIONING ON AZURE WITH ANSIBLE
+#
+#
+# INFORMATIONS
+#
+# Maintainer:     AJC-GR4
+# Version:        1
+# Release date:   05-17-2021
+#
+#
+# REQUIREMENTS
+#
+# 1. Ansible (see docs.ansible.com)
+# 2. Azure account (see azure documentation)
+#
+# 3. Azure CLI:
+#    $ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash)
+#
+# 4. Azure connection:
+#    $ az login
+#
+# 5. Python packages:
+#    $ sudo apt install python-pip
+#    $ sudo apt install ansible
+#    $ pip install setuptools wheel
+#    $ pip install ansible[azure]
+#
+#
+# NOTE
+#
+# 1. Do not forget to generate SSH keys (id_rsa and id_rsa.pub):
+#    $ ssh-keygen
+#
+
+
+- name: PROJECT INFRASTRUCTURE PROVISIONING ON AZURE
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  any_errors_fatal: true
+
+
+  vars_prompt:
+    - name: do_purge
+      prompt: Do you want to purge old resource group 'GrpeRessGrp4' (yes/no)?
+      private: no
+      default: "no"
+
+
+  roles:
+    - global
+    - ad
+    - gitlab
+    - jenkins
+    - lamp
+    - lamp-ha
+    - pyhttp
+
+...
