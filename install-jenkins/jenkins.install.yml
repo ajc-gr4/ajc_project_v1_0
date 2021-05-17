@@ -1,7 +1,7 @@
 ---
 
 #
-# INSTALL GITLAB WITH DOCKER
+# INSTALL JENKINS WITH DOCKER
 #
 #
 # INFORMATIONS
@@ -23,8 +23,8 @@
 #
 
 
-- name: INSTALL GITLAB WITH DOCKER-COMPOSE
-  hosts: azure-gitlab
+- name: INSTALL JENKINS WITH DOCKER-COMPOSE
+  hosts: azure-jenkins
   remote_user: "{{ admin_user_name }}"
   become: yes
   #become_method: su
@@ -38,13 +38,20 @@
 
   tasks:
 
+    - name: Create jenkins directory on docker host
+      file:
+        state: directory
+        owner: 1000
+        group: 1000
+        path: "/home/{{ admin_user_name }}/jenkins-data"
+
     - name: Set docker-compose file from template
       template:
-        src: ./templates/docker-compose.docker-gitlab.j2
+        src: ./templates/docker-compose.docker-jenkins.j2
         dest: "{{ docker_compose_path }}/{{ docker_compose_file }}"
         mode: '0700'
 
-    - name: Start GitLab container using shell command
+    - name: Start Jenkins container using shell command
       command: "docker-compose -f {{ docker_compose_file }} up -d"
       args:
         chdir: "{{ docker_compose_path }}"
