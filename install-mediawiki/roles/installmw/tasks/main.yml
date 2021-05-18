@@ -1,0 +1,15 @@
+---
+# tasks file for installmw
+- name: Download the tar file
+  get_url: url=http://releases.wikimedia.org/mediawiki/1.35/mediawiki-1.35.2.tar.gz dest=/srv
+
+- name: Unpack the mediawiki tar file
+  unarchive: copy=no src=/srv/mediawiki-1.35.2.tar.gz dest=/var/www
+
+- name: Rename the mediawiki directory
+  command: mv /var/www/mediawiki-1.35.2 /var/www/mediawiki
+
+- name: Create the mediawiki conf dir
+  file: path=/etc/mediawiki state=directory
+
+

@@ -1,0 +1,43 @@
+---
+
+- name: AZURE - Public IP address creation - myPublicIP-load-balancer
+  azure_rm_publicipaddress:
+    resource_group: GrpeRessGrp4
+    allocation_method: Static
+    name: myPublicIP-load-balancer
+  register: output_ip_address
+
+- name: AZURE-INFO - Dump public IP for load-balancer which will be created
+  debug:
+    msg: "Adresse IP publique (load-balancer): {{ output_ip_address.state.ip_address }}"
+
+- name: AZURE - Deploy load-balancer - myLoadBalancer
+  azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vmss_name }}lb"
+        location: "{{ location }}"
+        frontend_ip_configurations:
+          - name: "{{ vmss_name }}front-config"
+            public_ip_address: "{{ vmss_name }}"
+        backend_address_pools:
+          - name: "{{ vmss_name }}backend-pool"
+        probes:
+          - name: "{{ vmss_name }}prob0"
+            port: 8080
+            interval: 10
+            fail_count: 3
+        inbound_nat_pools:
+          - name: "{{ vmss_name }}nat-pool"
+            frontend_ip_configuration_name: "{{ vmss_name }}front-config"
+            protocol: Tcp
+            frontend_port_range_start: 50000
+            frontend_port_range_end: 50040
+            backend_port: 22
+        load_balancing_rules:
+          - name: "{{ vmss_name }}lb-rules"
+            frontend_ip_configuration: "{{ vmss_name }}front-config"
+            backend_address_pool: "{{ vmss_name }}backend-pool"
+            frontend_port: 80
+            backend_port: 8080
+            load_distribution: Default
+            probe: "{{ vmss_name }}prob0"

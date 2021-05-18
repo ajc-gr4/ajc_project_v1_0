@@ -1,0 +1,23 @@
+---
+# tasks file for php_mw
+- name: Package installation
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - python3-pymysql
+    - php
+    - php-mysql
+    - php-curl
+    - php-json
+    - php-cgi
+    - php-xsl
+    - php-cgi
+    - php-gd
+    - php-mbstring
+    - php-zip
+    - php-xmlrpc
+    - php-soap
+    - php-intl
+    - libapache2-mod-php

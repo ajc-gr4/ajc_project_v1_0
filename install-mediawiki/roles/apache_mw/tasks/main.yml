@@ -1,0 +1,12 @@
+---
+# tasks file for apache_mw
+- name: apache installation
+  apt:
+    name: apache2
+    state: latest
+
+- name: apache service activation
+  service:
+    name: apache2
+    state: started
+    enabled: yes

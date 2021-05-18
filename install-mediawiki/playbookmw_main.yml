@@ -1,0 +1,11 @@
+---
+- name: Mediawiki
+  hosts: all
+  remote_user: gui
+  become: yes
+  roles:
+    - apache_mw
+    - db_mw
+    - php_mw
+    - installmw
+...
