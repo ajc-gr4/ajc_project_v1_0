@@ -19,7 +19,7 @@
 
 # Certificat
 - name: certificat request
-  command: openssl req -x509 -nodes -days 500 -newkey rsa:2048 -sha256 -out /etc/apache2/server.crt -keyout /etc/apache2/server.key -subj "/C=FR/ST=Savoie/L=Chambery/O=AJC/OU=IT/CN=ajc-mediawiki.com"
+  command: openssl req -x509 -nodes -days 500 -newkey rsa:2048 -sha256 -out /etc/apache2/server.crt -keyout /etc/apache2/server.key -subj "/C=FR/ST=Savoie/L=Chambery/O=AJC/OU=IT/CN=mediawiki.com"
 
 - file:
     path: /etc/apache2/server.crt
@@ -34,5 +34,5 @@
   template:
           src: /home/groupe4/git_labo/ajc_project_v1_0/install-mediawiki/roles/apache_mw/templates/mediawiki-ssl.conf.j2
           dest: /etc/apache2/sites-available/default-ssl.conf
-
+  notify: apache restart
 
