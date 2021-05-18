@@ -1,0 +1,261 @@
+---
+
+#
+# LAMP-MEDIAWIKI DEPLOYMENT WITH ANSIBLE
+#
+#
+# INFORMATIONS
+#
+# Maintainer: AJC-GR4
+# Version: 1
+# Release date: 05-17-2021
+#
+#
+# REQUIREMENTS
+#
+# 1. Remote Host OS: Debian-like
+# 2. Stable SSH connexion with keys
+#
+#
+# WARNING
+#
+# 1. At least 4 Gio of RAM is required
+#    Consequently, if you are using Azure VM, the size must be 'Standard_B2ms' or higher
+#
+#
+# NOTE
+#
+# 1. Edit ./vars/vars.yml to set your own parameters
+# 2. Do not forget to configure the ../hosts file
+#
+
+
+- name: LAMP-MEDIAWIKI DEPLOYMENT WITH ANSIBLE
+  hosts: azure-lamp-ha
+  remote_user: "{{ admin_user_name }}"
+  become: yes
+  #become_method: su
+  #become_user: root
+
+
+
+  vars_files:
+    - ./vars/vars.yml
+
+
+  tasks:
+
+    # ---
+    # Standard installation of required packages via APT
+    # ---
+    - name: Package installation
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: latest
+      with_items:
+        - python3-pymysql
+        - python-mysqldb
+        - python-pip
+        - openssl
+        - apache2
+        - php
+        - php-mysql
+        - php-curl
+        - php-json
+        - php-cgi
+        - php-xsl
+        - php-cgi
+        - php-gd
+        - php-mbstring
+        - php-zip
+        - php-xmlrpc
+        - php-soap
+        - php-intl
+        - libapache2-mod-php
+        - mariadb-server
+
+    - name: Install python modules with pip
+      pip:
+        name: pyOpenSSL
+
+    # ---
+    # Modification of the security.conf file to improve the security of
+    # the HTTP server
+    # ---
+    - name: APACHE - Set basic security configuration
+      template:
+        src: "templates/security.conf.j2"
+        dest: "/etc/apache2/conf-available/security.conf"
+      notify: Restart apache
+
+    # ---
+    # Complete deletion of the default site
+    # ---
+    - name: APACHE - Remove apache default site
+      file:
+        path: "/var/www/html/index.html"
+        state: absent
+      notify: Restart apache
+
+    - name: APACHE - Disable apache default configuration
+      shell: "/usr/sbin/a2dissite 000-default.conf"
+      notify: Restart apache
+
+    - name: APACHE - Remove apache default configuration
+      file:
+        path: "/etc/apache2/site-available/000-default.conf"
+        state: absent
+      notify: Restart apache
+
+    # ---
+    # Modifying the listening ports of the HTTP server
+    # ---
+    - name: APACHE - Set apache listening port
+      template:
+        src: "templates/ports.conf.j2"
+        dest: "/etc/apache2/ports.conf"
+      notify: Restart apache
+
+    # ---
+    # Creating the root folder
+    # ---
+    - name: APACHE - Apache document root creation
+      file:
+        path: "/var/www/html/{{ domain_name }}"
+        state: directory
+        mode: '0755'
+
+    # ---
+    # Setting up the SSL protocol
+    # ---
+    - name: APACHE - Enable SSL module
+      shell: "/usr/sbin/a2enmod ssl"
+      notify: Restart apache
+
+    - name: APACHE - Generate SSL private key
+      openssl_privatekey:
+        path: "{{ ssl_path }}/privkey.pem"
+
+    - name: APACHE - Generate SSL CSR
+      openssl_csr:
+        path: "{{ ssl_path }}/cert.csr"
+        privatekey_path: "{{ ssl_path }}/privkey.pem"
+        common_name: "{{ ssl_common_name }}"
+
+    - name: APACHE - Generate self-signed SSL certificate
+      openssl_certificate:
+        path: "{{ ssl_path }}/fullchain.pem"
+        privatekey_path: "{{ ssl_path }}/privkey.pem"
+        csr_path: "{{ ssl_path }}/cert.csr"
+        provider: selfsigned
+
+    # ---
+    # Configuration and activation of the new website
+    # ---
+    - name: APACHE - New site configuration
+      template:
+        src: "templates/apache.conf.j2"
+        dest: "/etc/apache2/sites-available/{{ domain_name }}.conf"
+      notify: Restart apache
+
+    - name: APACHE - Enable new site
+      shell: "/usr/sbin/a2ensite {{ domain_name }}.conf"
+      notify: Restart apache
+
+    # ---
+    # Starting MySQL services
+    # ---
+    - name: MYSQL - Ensure MySQL started
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    # ---
+    # Configuring MySQL users
+    #
+    # WARNING: If you are running this playbook for the second (or more)
+    # time, please uncomment the login informations
+    # ---
+    - name: MYSQL - Set root password
+      mysql_user:
+        name: root
+        password: "{{ mysql_root_pwd }}"
+        host: localhost
+        #login_user: root
+        #login_password: "{{ mysql_root_pwd }}"
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+      notify: Restart mysql
+
+    - name: MYSQL - Create new all granted user
+      mysql_user:
+        name: "{{ mysql_user_name }}"
+        password: "{{ mysql_user_pwd }}"
+        login_user: root
+        login_password: "{{ mysql_root_pwd }}"
+        priv: '*.*:ALL'
+        host: "%"
+        state: present
+      notify: Restart mysql
+
+    # ---
+    # Allow external connexion for the new user
+    # ---
+    - name: MYSQL - Set bind-address for the new user
+      lineinfile:
+        path: /etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp: '^bind-address'
+        line: "bind-address = {{ mysql_user_host }}"
+      notify: Restart mysql
+
+    # ---
+    # Removing MySQL default configurations
+    # ---
+    - name: MYSQL - Remove anonymous accounts
+      mysql_user:
+        name: ''
+        host_all: yes
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_pwd }}"
+      notify: Restart mysql
+
+    - name: MYSQL - Remove test databases
+      mysql_db:
+        name: test
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_pwd }}"
+      notify: Restart mysql
+
+
+    # ---
+    # Mediawiki installation and configuration
+    # ---
+    - name: MEDIAWIKI - Download the tar file
+      get_url: url=http://releases.wikimedia.org/mediawiki/1.35/mediawiki-1.35.2.tar.gz dest=/srv
+
+    - name: MEDIAWIKI - Unpack the mediawiki tar file
+      unarchive: copy=no src=/srv/mediawiki-1.35.2.tar.gz dest=/var/www
+
+    - name: MEDIAWIKI - Rename the mediawiki directory
+      command: mv /var/www/mediawiki-1.35.2 /var/www/mediawiki
+
+    - name: MEDIAWIKI - Create the mediawiki conf dir
+      file: path=/etc/mediawiki state=directory
+
+
+  handlers:
+
+    - name: Restart apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Restart mysql
+      service:
+        name: mysql
+        state: restarted
+
+...
