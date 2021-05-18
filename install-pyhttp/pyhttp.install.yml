@@ -1,0 +1,101 @@
+---
+
+#
+# INITIAL DEPLOYMENT OF THE PYTHON HTTP SERVER
+#
+#
+# INFORMATIONS
+#
+# Maintainer:     AJC-GR4
+# Version:        1
+# Release date:   05-18-2021
+#
+#
+# NOTE
+#
+# 1. Do not forget to configure the ../hosts file
+# 2. Add your settings in the ./vars/vars.yml file
+#
+
+
+- name: INITIAL DEPLOYMENT OF THE PYHTTP APPLICATION
+  hosts: azure-pyhttp
+  gather_facts: yes
+  remote_user: "{{ admin_user_name }}"
+  become: yes
+
+  # --- Uncomment the following if the remote hosts do not have sudo
+  #     In this case, add '--ask-become-pass' when running the playbook ---
+  #become_method: su
+  #become_user: root
+  
+
+  vars_files:
+    - vars/vars.yml
+
+
+  tasks:
+
+    - name: Install pip
+      apt:
+        name: python-pip
+        state: present
+        update_cache: yes
+
+    - name: Install docker-py
+      pip:
+        name: docker
+
+    - name: Create build directory
+      file:
+        path: /root/build-docker
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy dockerfile
+      copy:
+        src: ./build-image/Dockerfile
+        dest: /root/build-docker/Dockerfile
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy pyapp directory
+      copy:
+        src: ./build-image/pyapp
+        dest: /root/build-docker
+        owner: root
+        group: root
+        mode: '0644'
+        directory_mode: yes
+
+    - name: Build docker image
+      docker_image:
+        name: pyhttp:v1.0
+        path: /root/build-docker
+        state: present
+
+    - name: Archive image as tarball
+      docker_image:
+        name: pyhttp:v1.0
+        archive_path: /root/pyhttp_v1_0.tar
+        source: pull
+        state: present
+
+    - name: Fetch archived image
+      fetch:
+        src: /root/pyhttp_v1_0.tar
+        dest: ./pyhttp_v1_0.tar
+        flat: true
+
+    - name: Restart a container
+      docker_container:
+        name: pyhttp
+        image: pyhttp:v1.0
+        state: started
+        ports:
+          - "443:443"
+
+...
