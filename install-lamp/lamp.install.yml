@@ -56,10 +56,16 @@
         state: latest
       with_items:
         - python3-pymysql
+        - python-mysqldb
+        - python-pip
         - openssl
         - apache2
         - php
         - mariadb-server
+
+    - name: Install python modules with pip
+      pip:
+        name: pyOpenSSL
 
     # ---
     # Modification of the security.conf file to improve the security of
@@ -156,12 +162,17 @@
 
     # ---
     # Configuring MySQL users
+    #
+    # WARNING: If you are running this playbook for the second (or more)
+    # time, please uncomment the login informations
     # ---
     - name: MYSQL - Set root password
       mysql_user:
         name: root
         password: "{{ mysql_root_pwd }}"
         host: localhost
+        #login_user: root
+        #login_password: "{{ mysql_root_pwd }}"
         login_unix_socket: "/var/run/mysqld/mysqld.sock"
       notify: Restart mysql
 
@@ -207,9 +218,19 @@
       notify: Restart mysql
 
 
-
-    - name: JEKYLL - Execute the shell script
+    # ---
+    # Jekyll installation and configuration
+    # ---
+    - name: JEKYLL - Install jekyll from shell script
       script: ./files/install.jekyll.sh
+
+    - name: JEKYLL - Configure default page site
+      template:
+        src: "templates/_config.yml.j2"
+        dest: "{{ jekyll_site_path }}/_config.yml"
+
+    - name: JEKYLL - Build jekyll site
+      script: ./files/build.jekyll.sh
 
 
   handlers:

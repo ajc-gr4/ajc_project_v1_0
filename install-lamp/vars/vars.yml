@@ -6,6 +6,8 @@
 #
 
 
+admin_user_name: "gui"
+
 # --- APACHE HTTP SERVER ---------------------------------------------
 
 # Indicate the server name
@@ -33,5 +35,7 @@ mysql_root_pwd : "Azerty12"
 mysql_user_name: "mysql"
 mysql_user_pwd: "Azerty12"
 mysql_user_host: "0.0.0.0"
+
+jekyll_site_path: "/home/gui/site_projet"
 
 ...
