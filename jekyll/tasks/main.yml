@@ -1,0 +1,10 @@
+- name: Execute the script 
+  script: /etc/ansible/roles/jekyll/scriptJekyll.sh
+
+- name: Configuration page site
+  template: 
+    src: /etc/ansible/roles/jekyll/templates/_config.j2
+    dest: /home/gui/site_projet/_config.yml
+
+- name: Execute jekyll server
+  script: /etc/ansible/roles/jekyll/scriptJekyll2.sh
