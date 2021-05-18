@@ -72,30 +72,13 @@
         directory_mode: yes
 
     - name: Build docker image
-      docker_image:
-        name: pyhttp:v1.0
-        path: /root/build-docker
-        state: present
+      command: docker build -t pyhttp .
+      args:
+        chdir: /root/build-docker
 
-    - name: Archive image as tarball
-      docker_image:
-        name: pyhttp:v1.0
-        archive_path: /root/pyhttp_v1_0.tar
-        source: pull
-        state: present
-
-    - name: Fetch archived image
-      fetch:
-        src: /root/pyhttp_v1_0.tar
-        dest: ./pyhttp_v1_0.tar
-        flat: true
-
-    - name: Restart a container
-      docker_container:
-        name: pyhttp
-        image: pyhttp:v1.0
-        state: started
-        ports:
-          - "443:443"
+    - name: Run pyhttp container
+      command: docker run -d -p 443:443 pyhttp
+      args:
+        chdir: /root/build-docker
 
 ...
