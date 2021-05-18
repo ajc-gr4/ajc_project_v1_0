@@ -28,7 +28,6 @@
 # 1. Edit ./vars/vars.yml to set your own parameters
 # 2. Do not forget to configure the ../hosts file
 #
-# https://www.christopherrung.com/tutorial/2015/05/07/apache-and-jekyll/
 
 
 - name: LAMP-JEKYLL DEPLOYMENT WITH ANSIBLE
