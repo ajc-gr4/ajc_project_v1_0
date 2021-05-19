@@ -81,4 +81,5 @@ Il est également recommandé de modifier le fichier _vars/vars.yml_ afin de per
 ```shell
 ansible-playbook -i ../hosts pyhttp.deploy.yml
 ```
-
+## À noter
+Les projets _deploy-az-vmss_, _install-gitlab_, _install-jenkins_, _install-mediawiki_ et _jekyll_ sont actuellement **obsolètes** ou en phase de test et remplacés par un des projets décrit ci-dessus.
