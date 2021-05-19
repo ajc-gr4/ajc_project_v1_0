@@ -1,44 +1,92 @@
 ---
 
-- hosts: localhost
+#
+# WARNING: '$ az login' required
+#
+# DEBUG :
+#       - 'UnicodeEncodeError: 'ascii' codec can't encode character u'\\u2018' in position 596: ordinal not in range(128)'
+#       - "MODULE FAILURE\\nSee stdout/stderr for the exact error"
+#   -> QuotaExceeded !
+#
+
+- name: VMSS PROVISIONING ON AZURE
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  any_errors_fatal: true
+
+
   vars:
     resource_group: GrpeRessGrp4-VMSS
     vmss_name: myVMSS
-    location: japanest
+    location: canadaeast
     admin_username: "gui"
     admin_password: "Azerty123123!"
 
+
+  vars_prompt:
+    - name: do_purge
+      prompt: Do you want to purge old resource group 'GrpeRessGrp4-VMSS' (yes/no)?
+      private: no
+      default: "no"
+
+
   tasks:
+    - name: Purge old resource group - GrpeRessGrp4-VMSS
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        state: absent
+        force_delete_nonempty: yes
+      when: do_purge | bool
+
     - name: Create a resource group
       azure_rm_resourcegroup:
         name: "{{ resource_group }}"
         location: "{{ location }}"
+
     - name: Create virtual network
       azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ vmss_name }}"
         address_prefixes: "10.0.0.0/16"
+
     - name: Add subnet
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: "{{ vmss_name }}"
         address_prefix: "10.0.1.0/24"
         virtual_network: "{{ vmss_name }}"
+
     - name: Create public IP address
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Static
         name: "{{ vmss_name }}"
+      register: output_ip_address
+
+    - name: AZURE-INFO - Dump public IP
+      debug:
+        msg: "Adresse IP publique (vmss): {{ output_ip_address.state.ip_address }}"
+
     - name: Create Network Security Group that allows SSH
       azure_rm_securitygroup:
         resource_group: "{{ resource_group }}"
-        name: "{{ vmss_name }}"
+        name: "{{ vmss_name }}sg"
         rules:
           - name: SSH
             protocol: Tcp
             destination_port_range: 22
             access: Allow
             priority: 1001
+            direction: Inbound
+
+          - name: Allow_Web_Traffic
+            protocol: Tcp
+            destination_port_range:
+              - 80
+              - 443
+            access: Allow
+            priority: 1002
             direction: Inbound
 
     - name: Create a load balancer
@@ -61,10 +109,11 @@
         natpool_backend_port: 80
         natpool_protocol: Tcp
 
-    - name: Create VMSS
+    - name: Create virtual machine scale set - myVMSS
       azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}"
         name: "{{ vmss_name }}"
+        security_group: "{{ vmss_name }}sg"
         vm_size: Standard_DS1_v2
         admin_username: "{{ admin_username }}"
         admin_password: "{{ admin_password }}"
@@ -77,9 +126,9 @@
         managed_disk_type: Standard_LRS
         os_disk_caching: ReadWrite
         image:
-          offer: UbuntuServer
-          publisher: Canonical
-          sku: 16.04-LTS
+          offer: debian-10
+          publisher: Debian
+          sku: '10'
           version: latest
         load_balancer: "{{ vmss_name }}lb"
         data_disks:
