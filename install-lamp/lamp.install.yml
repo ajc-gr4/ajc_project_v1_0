@@ -170,8 +170,8 @@
         name: root
         password: "{{ mysql_root_pwd }}"
         host: localhost
-        #login_user: root
-        #login_password: "{{ mysql_root_pwd }}"
+        login_user: root
+        login_password: "{{ mysql_root_pwd }}"
         login_unix_socket: "/var/run/mysqld/mysqld.sock"
       notify: Restart mysql
 

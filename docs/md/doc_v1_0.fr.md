@@ -64,6 +64,7 @@ Les prérequis sont identiques à la partie **deploy-az-it** (II.B).
 ansible-playbook -i ../hosts infra.setup.yml
 ```
 ## IV. install-lamp-ha - MEDIAWIKI
+![](img/doc_mediawiki.png)
 #### IV.A. Architecture
 La machine virtuelle fournit les fonctionnalités suivantes:
 - Site public de l'application
