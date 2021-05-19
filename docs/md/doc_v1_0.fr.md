@@ -65,7 +65,10 @@ ansible-playbook -i ../hosts infra.setup.yml
 ```
 ## IV. install-lamp-ha - MEDIAWIKI
 ![](img/doc_mediawiki.png)
-#### IV.A. Architecture
+_Figure 2: Architecture du projet MediaWiki_
+#### IV.A. Généralités et architecture
+MediaWiki est un logiciel de type wiki permettant de réaliser des articles en ligne ; c'est un réservoir de contenus dans lequel les pages Web sont modifiables par tous (collaboratif).
+
 La machine virtuelle fournit les fonctionnalités suivantes:
 - Site public de l'application
 - Le service web et la base de données qui communique avec le logiciel client
