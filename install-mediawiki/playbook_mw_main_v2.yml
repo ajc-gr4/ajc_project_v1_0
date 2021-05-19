@@ -1,0 +1,218 @@
+---
+- name: LAMP-MEDIAWIKI DEPLOYMENT WITH ANSIBLE
+  hosts: all
+  remote_user: gui
+  become: yes
+  #become_method: su
+  #become_user: root
+
+
+  tasks:
+
+    # ---
+    # Standard installation of required packages via APT
+    # ---
+    - name: Package installation
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: latest
+      loop:
+        - python3-pymysql
+        - python-mysqldb
+        - python-pip
+        - openssl
+        - apache2
+        - php
+        - mariadb-server
+        - php-mysql
+        - php-curl
+        - php-json
+        - php-xsl
+        - php-cgi
+        - php-gd
+        - php-mbstring
+        - php-zip
+        - php-xmlrpc
+        - php-soap
+        - php-intl
+        - libapache2-mod-php
+
+    - name: Install python modules with pip
+      pip:
+        name: pyOpenSSL
+
+    # ---
+    # Modification of the security.conf file to improve the security of
+    # the HTTP server
+    # ---
+    - name: APACHE - Set basic security configuration
+      template:
+        src: "templates/security.conf.j2"
+        dest: "/etc/apache2/conf-available/security.conf"
+      notify: Restart apache
+
+    # ---
+    # Complete deletion of the default site
+    # ---
+    - name: APACHE - Remove apache default site
+      file:
+        path: "/var/www/html/index.html"
+        state: absent
+      notify: Restart apache
+
+    - name: APACHE - Disable apache default configuration
+      shell: "/usr/sbin/a2dissite 000-default.conf"
+      notify: Restart apache
+
+    - name: APACHE - Remove apache default configuration
+      file:
+        path: "/etc/apache2/site-available/000-default.conf"
+        state: absent
+      notify: Restart apache
+
+    # ---
+    # Modifying the listening ports of the HTTP server
+    # ---
+    - name: APACHE - Set apache listening port
+      template:
+        src: "templates/ports.conf.j2"
+        dest: "/etc/apache2/ports.conf"
+      notify: Restart apache
+
+
+    # ---
+    # Setting up the SSL protocol
+    # ---
+    - name: APACHE - Enable SSL module
+      shell: "/usr/sbin/a2enmod ssl"
+      notify: Restart apache
+
+    - name: APACHE - Generate SSL private key
+      openssl_privatekey:
+        path: /etc/apache2/privkey.pem
+
+    - name: APACHE - Generate SSL CSR
+      openssl_csr:
+        path: /etc/apache2/cert.csr
+        privatekey_path: /etc/apache2/privkey.pem
+        common_name: "AJC-GR4"
+
+    - name: APACHE - Generate self-signed SSL certificate
+      openssl_certificate:
+        path: /etc/apache2/fullchain.pem
+        privatekey_path: /etc/apache2/privkey.pem
+        csr_path: /etc/apache2/cert.csr
+        provider: selfsigned
+
+    # ---
+    # Configuration and activation of the new website
+    # ---
+    - name: APACHE - New site configuration
+      template:
+        src: "templates/apache.conf.j2"
+        dest: "/etc/apache2/sites-available/mediawiki.conf"
+      notify: Restart apache
+
+    - name: APACHE - Enable new site
+      shell: "/usr/sbin/a2ensite mediawiki.conf"
+      notify: Restart apache
+
+    # ---
+    # Starting MySQL services
+    # ---
+    - name: MYSQL - Ensure MySQL started
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    # ---
+    # Configuring MySQL users
+    #
+
+    - name: MYSQL - Set root password
+      copy:
+        dest: "/root/.my.cnf"
+        content:
+          '[client]
+          user=root
+          password=123'
+      notify: Restart mysql
+
+    - name: MYSQL - Create new all granted user
+      mysql_user:
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+        name: "gui"
+        password: "123"
+        priv: '*.*:ALL'
+        host: "%"
+        state: present
+      notify: Restart mysql
+
+    # ---
+    # Removing MySQL default configurations
+    # ---
+
+    - name: Supprimer anonymous accounts
+      mysql_user:
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+        name: ''
+        host_all: yes
+        state: absent
+      notify: restart mysql
+
+    - name: Enlever db test
+      mysql_db:
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+        name: test
+        state: absent
+      notify: Restart mysql
+
+
+    # ---
+    # Mediawiki installation and configuration
+    # ---
+
+    - name: Download the tar file
+      get_url: url=http://releases.wikimedia.org/mediawiki/1.35/mediawiki-1.35.2.tar.gz dest=/srv
+
+    - name: Unpack the mediawiki tar file
+      unarchive: copy=no src=/srv/mediawiki-1.35.2.tar.gz dest=/var/www/html
+
+    - name: Rename the mediawiki directory
+      command: mv /var/www/html/mediawiki-1.35.2 /var/www/html/mediawiki
+
+    - name: Change the rights
+      file:
+        path: /var/www/html/mediawiki
+        mode: '0755'
+
+#    - name: "mediawiki configuration"
+#      become: yes
+#      become_user: "gui"
+#      args:
+#        creates: "/var/www/html/mediawiki/LocalSettings.php"
+#        chdir: "/var/www/html/mediawiki/maintenance"
+#      command:
+#    php install.php --scriptpath /mediawiki
+#        --dbname mediawiki --lang fr
+#        --dbuser gui
+#        --dbpass 123
+#        --pass 123
+#        --dbserver 104.214.144.156  
+#        mediawikitest gui
+
+
+  handlers:
+    - name: Restart apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Restart mysql
+      service:
+        name: mysql
+        state: restarted
+
+...
