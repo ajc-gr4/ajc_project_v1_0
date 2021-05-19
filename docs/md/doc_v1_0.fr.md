@@ -2,7 +2,7 @@
 Version: 1
 Date: 19-05-2021
 ## I. Introduction
-...
+![](img/doc.png)
 ## II. deploy-az-it
 #### II.A. Généralités
 Ce playbook ansible a été développé pour permettre de déployer facilement l'ensemble de l'infrastrucure utilisée pour le projet.
