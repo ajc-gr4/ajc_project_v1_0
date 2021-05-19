@@ -31,5 +31,54 @@ Dans le cadre du projet, les versions suivantes ont été utilisé:
 ```shell
 ansible-playbook -i ../hosts infra.deploy.yml
 ```
+## III. config-az-it
+#### III.A Généralités
+Les projet config-az-it est utilisé pour installer et configurer les outils de base sur l'ensemble des machines distantes.
 
+Liste des outils installés:
+- vim
+- git
+- htop
+- zsh
+- tmux
+- apt-transport-https
+- ca-certificates
+- curl
+- gnupg
+- lsb-release
+
+Liste des plugins installés:
+- oh-my-zsh
+- pathogen
+
+Fichiers de configuration modifiés:
+- bash (~/.bashrc)
+- zsh (~/.zshrc)
+- vim (~/.vimrc)
+- SSH (/etc/ssh/sshd_config)
+
+#### III.B. Prérequis
+Les prérequis sont identiques à la partie **deploy-az-it** (II.B).
+#### III.C Utilisation
+```shell
+ansible-playbook -i ../hosts infra.setup.yml
+```
+## XX. install-pyhttp
+#### XX.A. Généralités
+Le projet install-pyhttp permet de déployer rapidement un serveur HTTP écrit en Python. Afin de faciliter la mise à jour de l'application, l'ensemble du serveur est déployé dans un conteneur Docker. Pour plus de sécurité, ce serveur utilise le protocole HTTPS. 
+#### XX.B. Prérequis
+Pour utiliser ce playbook, il est nécessaire d'installer au préalable sur la machine master:
+- Ansible
+- Azure CLI
+
+De plus, afin qu'Ansible puisse communiquer avec la machine distante, il est nécessaire d'avoir configurer au préalable une connexion SSH par clés. Cependant, si vous avez utilisé le projet _config-az-it_, cette étape a normalement déjà été réalisée.
+
+Afin d'installer Ansible et Azure CLI, vous pouvez exécuter le script présenté dans la partie **deploy-az-it** (II.B).
+#### XX.C Configuration
+Avant de lancer le playbook, il est impératif d'éditer le fichier _hosts_ présent à la racine du projet. Pour cela, veuillez indiquer l'adresse IP publique de votre machine distante dans la partie [azure-pyhttp].
+Il est également recommandé de modifier le fichier _vars/vars.yml_ afin de personnaliser les paramètres du playbook.
+#### XX.D. Utilisation
+```shell
+ansible-playbook -i ../hosts pyhttp.deploy.yml
+```
 
