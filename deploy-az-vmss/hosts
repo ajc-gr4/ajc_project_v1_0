@@ -1,0 +1,4 @@
+[vmss]
+52.229.121.107 ansible_port=5000 ansible_ssh_user=gui ansible_ssh_pass=Azerty123123!
+52.229.121.107 ansible_port=50002 ansible_ssh_user=gui ansible_ssh_pass=Azerty123123!
+

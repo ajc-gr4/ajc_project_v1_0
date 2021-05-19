@@ -114,7 +114,7 @@
         resource_group: "{{ resource_group }}"
         name: "{{ vmss_name }}"
         security_group: "{{ vmss_name }}sg"
-        #public_ip_per_vm: yes
+        #public_ip_per_vm: true
         vm_size: Standard_DS1_v2
         admin_username: "{{ admin_username }}"
         admin_password: "{{ admin_password }}"

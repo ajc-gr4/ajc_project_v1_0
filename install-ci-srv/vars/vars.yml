@@ -1,0 +1,10 @@
+---
+
+admin_user_name: "gui"
+
+external_url: http://104.214.147.230
+
+docker_compose_path: "/home/{{ admin_user_name }}/"
+docker_compose_file: docker-compose.docker-ci-srv.yml
+
+...

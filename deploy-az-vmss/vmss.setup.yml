@@ -1,0 +1,11 @@
+- name: Install apache on a scale set
+  hosts: vmss
+  remote_user: "gui"
+  become: yes
+
+  tasks:
+  - name: Install apache
+    apt:
+      name: apache2
+      state: latest
+      update_cache: yes
