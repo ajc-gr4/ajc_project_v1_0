@@ -1,5 +1,7 @@
 # AJC Project - 2021
 
+![](docs/md/img/doc.png)
+
 ## Generalities
 This is the source code of the final project performed as part of the AJC formation.
 
