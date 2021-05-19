@@ -94,10 +94,10 @@ Ce playbook permet par la suite :
 - une mise en place et la configuration de la base de données
 - une installation de Mediawiki via le téléchargement du fichier .tar.gz d'installation et son désarchivement dans la machine virtuelle.
 
-## XX. install-pyhttp - PyHTTP SERVER
-#### XX.A. Généralités
+## V. install-pyhttp - PyHTTP SERVER
+#### V.A. Généralités
 Le projet install-pyhttp permet de déployer rapidement un serveur HTTP écrit en Python. Afin de faciliter la mise à jour de l'application, l'ensemble du serveur est déployé dans un conteneur Docker. Pour plus de sécurité, ce serveur utilise le protocole HTTPS. 
-#### XX.B. Prérequis
+#### V.B. Prérequis
 Pour utiliser ce playbook, il est nécessaire d'installer au préalable sur la machine master:
 - Ansible
 - Azure CLI
@@ -105,12 +105,29 @@ Pour utiliser ce playbook, il est nécessaire d'installer au préalable sur la m
 De plus, afin qu'Ansible puisse communiquer avec la machine distante, il est nécessaire d'avoir configurer au préalable une connexion SSH par clés. Cependant, si vous avez utilisé le projet _config-az-it_, cette étape a normalement déjà été réalisée.
 
 Afin d'installer Ansible et Azure CLI, vous pouvez exécuter le script présenté dans la partie **deploy-az-it** (II.B).
-#### XX.C Configuration
+#### V.C Configuration
 Avant de lancer le playbook, il est impératif d'éditer le fichier _hosts_ présent à la racine du projet. Pour cela, veuillez indiquer l'adresse IP publique de votre machine distante dans la partie [azure-pyhttp].
 Il est également recommandé de modifier le fichier _vars/vars.yml_ afin de personnaliser les paramètres du playbook.
-#### XX.D. Utilisation
+#### V.D. Utilisation
 ```shell
 ansible-playbook -i ../hosts pyhttp.deploy.yml
 ```
+## VI. install-LAMP - JEKYLL SERVER
+#### VI.A. Généralités
+Jekyll est un générateur de site statique simple, adapté aux pages web statiques et aux blogs. Les pages web sont personnalisables à l’aide de thèmes issus de modèles html. 
+#### VI.B. Prérequis
+La machine Master communique avec la machine virtuelle LAMP hébergée sous Azure par SSH.
+
+Apache2 est préalablement installé sur la machine virtuelle LAMP, utilisant le protocole HTTPS pour plus de sécurité.
+#### VI.C. Configuration
+Le déploiement du server Jekyll est réalisé via un playbook Ansible et l’IP de la machine LAMP contenu dans le fichier inventaire hosts.
+
+La première partie consiste à installer Jekyll et ses prérequis Ruby et Bundle car Jekyll est codé en Ruby. Un dossier projet est créé, dans lequel seront placées les pages web du site statique.
+
+La création et la configuration d’une page web sont ensuite réalisées via un fichier _config.yml dans lequel la page web est personnalisée. 
+#### VI.D. Exécution
+Le server Jekyll est enfin exécuté via une commande build qui vient écraser le site apache dans le dossier /var/www/html qui a été préalablement installé avant dans le playbook de la machine Master.
+
+La page web crée est accessible sur le navigateur avec l’IP de la machine LAMP.
 ## À noter
 Les projets _deploy-az-vmss_, _install-gitlab_, _install-jenkins_, _install-mediawiki_ et _jekyll_ sont actuellement **obsolètes** ou en phase de test et remplacés par un des projets décrit ci-dessus.
