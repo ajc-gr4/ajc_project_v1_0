@@ -1,6 +1,5 @@
 # DOCUMENTATION - Projet AJC 2021
-Version: 1
-Date: 19-05-2021
+Version: 1 - Date: 19-05-2021
 ## I. Introduction
 ![](img/doc.png)
 ## II. deploy-az-it
@@ -63,7 +62,32 @@ Les prérequis sont identiques à la partie **deploy-az-it** (II.B).
 ```shell
 ansible-playbook -i ../hosts infra.setup.yml
 ```
-## XX. install-pyhttp
+## IV. install-lamp-ha - MEDIAWIKI
+#### IV.A. Architecture
+La machine virtuelle fournit les fonctionnalités suivantes:
+- Site public de l'application
+- Le service web et la base de données qui communique avec le logiciel client
+
+#### IV.B. Technologies utilisées
+La machine virtuelle est composée de trois parties distinctes :
+	- un serveur web Apache2 (2.4.38)
+	- une base de données MariaDB (15.1)
+	- une application php : MediaWiki.
+
+Ces composantes ont été déployées et configurés à l'aide de la plate-forme logicielle Ansible. 
+
+Apache2 et mariaDB ont été choisis dans le cadre de ce projet car ce sont des api simples à déployer. Apache2 permet de développer des applications web rapidement, tandis que MariaDB a été choisie comme serveur de base de données car il est à la fois open-source et performant.
+#### IV.C. Interactions extérieures
+La machine Master communique avec la machine virtuelle LAMP-HA par SSH, tandis que le client va s'y connecter par un protocole HTTPS, afin de sécuriser l'accès à ce dernier
+#### IV.D. Déploiement des différentes composantes
+Afin de réaliser le déploiement, puis la configuration des différents modules composants la machine virtuelle, un playbook a été réalisé pour installer apache2, mariadb-server ainsi que différents packages php nécessaires pour l'utilisation et le déploiement de MediaWiki et MariaDB.
+Ce playbook permet par la suite :
+- une mise en marche du serveur web et sa configuration (dont une refonte du site par défaut d'Apache 2)
+- une sécurisation des serveurs, puis de la connection via une génération de certificats autosignés
+- une mise en place et la configuration de la base de données
+- une installation de Mediawiki via le téléchargement du fichier .tar.gz d'installation et son désarchivement dans la machine virtuelle.
+
+## XX. install-pyhttp - PyHTTP SERVER
 #### XX.A. Généralités
 Le projet install-pyhttp permet de déployer rapidement un serveur HTTP écrit en Python. Afin de faciliter la mise à jour de l'application, l'ensemble du serveur est déployé dans un conteneur Docker. Pour plus de sécurité, ce serveur utilise le protocole HTTPS. 
 #### XX.B. Prérequis
