@@ -2,6 +2,7 @@
 Version: 1 - Date: 19-05-2021
 ## I. Introduction
 ![](img/doc.png)
+
 _Figure 1: Objectif final du projet_
 ## II. deploy-az-it
 #### II.A. Généralités
@@ -65,6 +66,7 @@ ansible-playbook -i ../hosts infra.setup.yml
 ```
 ## IV. install-lamp-ha - MEDIAWIKI
 ![](img/doc_mediawiki.png)
+
 _Figure 2: Architecture du projet MediaWiki_
 #### IV.A. Généralités et architecture
 MediaWiki est un logiciel de type wiki permettant de réaliser des articles en ligne ; c'est un réservoir de contenus dans lequel les pages Web sont modifiables par tous (collaboratif).
